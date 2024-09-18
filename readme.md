@@ -1,6 +1,14 @@
-# Azure Resource Group and VNet Module (AI-generated)
 
-This Terraform module creates an Azure resource group and a virtual network (VNet).
+# Azure Two Virtual Machines Module
+
+This Terraform module provisions two virtual machines connected to a virtual network (VNet) on Azure.
+
+## Resources Created
+
+- Azure Resource Group
+- Azure Virtual Network (VNet) with a Subnet
+- Two Azure Linux Virtual Machines (Ubuntu)
+- Network Security Group to allow traffic between VMs
 
 ## Inputs
 
@@ -11,23 +19,9 @@ This Terraform module creates an Azure resource group and a virtual network (VNe
 - `resource_group_name`: Name of the resource group (default: `instruqt-rg`)
 - `location`: Azure region for resource deployment (default: `East US`)
 - `vnet_name`: Name of the virtual network (default: `instruqt-vnet`)
+- `admin_password`: Admin password for the VMs (required)
 
 ## Outputs
 
-- `resource_group_name`: The name of the created resource group
-- `virtual_network_name`: The name of the created virtual network
-
-Declare the module like so:
-```
-module "azure_resources" {
-  source = "./path/to/your/module"  # or use a version control URL if hosted remotely
-
-  subscription_id      = var.subscription_id
-  client_id            = var.client_id
-  client_secret        = var.client_secret
-  tenant_id            = var.tenant_id
-  resource_group_name  = "instruqt-rg"
-  location             = "East US"
-  vnet_name            = "instruqt-vnet"
-}
-```
+- `vm1_private_ip`: Private IP address of the first VM
+- `vm2_private_ip`: Private IP address of the second VM
