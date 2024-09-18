@@ -1,9 +1,9 @@
-output "resource_group_name" {
-  description = "The name of the resource group"
-  value       = azurerm_resource_group.rg.name
+output "vm1_private_ip" {
+  description = "The private IP address of the first virtual machine"
+  value       = azurerm_network_interface.nic1.private_ip_address
 }
 
-output "virtual_network_name" {
-  description = "The name of the virtual network"
-  value       = azurerm_virtual_network.vnet.name
+output "vm2_private_ip" {
+  description = "The private IP address of the second virtual machine"
+  value       = azurerm_network_interface.nic2.private_ip_address
 }
