@@ -1,4 +1,8 @@
 
+provider "azurerm" {
+  features {}
+}
+
 resource "azurerm_resource_group" "rg" {
   name     = var.resource_group_name
   location = var.location
@@ -12,64 +16,75 @@ resource "azurerm_virtual_network" "vnet" {
 }
 
 resource "azurerm_subnet" "subnet" {
-  name                 = "internal-subnet"
+  name                 = "subnet1"
   resource_group_name  = azurerm_resource_group.rg.name
   virtual_network_name = azurerm_virtual_network.vnet.name
   address_prefixes     = ["10.0.1.0/24"]
 }
 
-# Network Security Group (optional, to allow traffic between VMs)
 resource "azurerm_network_security_group" "nsg" {
-  name                = "internal-nsg"
+  name                = "nsg1"
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
-
-  security_rule {
-    name                       = "allow-internal"
-    priority                   = 100
-    direction                  = "Inbound"
-    access                     = "Allow"
-    protocol                   = "Tcp"
-    source_port_range          = "*"
-    destination_port_range     = "*"
-    source_address_prefix      = "10.0.1.0/24"
-    destination_address_prefix = "10.0.1.0/24"
-  }
 }
 
-# Network Interface for the first VM
+resource "azurerm_network_security_rule" "allow_all_outbound" {
+  name                        = "AllowAllOutbound"
+  priority                    = 100
+  direction                   = "Outbound"
+  access                      = "Allow"
+  protocol                    = "*"
+  source_port_range           = "*"
+  destination_port_range      = "*"
+  source_address_prefix       = "*"
+  destination_address_prefix  = "*"
+  network_security_group_name = azurerm_network_security_group.nsg.name
+}
+
+resource "azurerm_public_ip" "public_ip1" {
+  name                = "public_ip1"
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+  allocation_method   = "Dynamic"
+}
+
+resource "azurerm_public_ip" "public_ip2" {
+  name                = "public_ip2"
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+  allocation_method   = "Dynamic"
+}
+
 resource "azurerm_network_interface" "nic1" {
-  name                = "nic-server1"
+  name                = "nic1"
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
-
   ip_configuration {
     name                          = "internal"
     subnet_id                     = azurerm_subnet.subnet.id
     private_ip_address_allocation = "Dynamic"
+    public_ip_address_id          = azurerm_public_ip.public_ip1.id
   }
 }
 
-# Network Interface for the second VM
 resource "azurerm_network_interface" "nic2" {
-  name                = "nic-server2"
+  name                = "nic2"
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
-
   ip_configuration {
     name                          = "internal"
     subnet_id                     = azurerm_subnet.subnet.id
     private_ip_address_allocation = "Dynamic"
+    public_ip_address_id          = azurerm_public_ip.public_ip2.id
   }
 }
 
-# Virtual Machine 1
 resource "azurerm_linux_virtual_machine" "vm1" {
-  name                = "server1"
+  name                = "vm1"
   resource_group_name = azurerm_resource_group.rg.name
   location            = azurerm_resource_group.rg.location
-  size                = "Standard_B1s"
-  admin_username      = "azureuser"
+  size                = "Standard_B1ms"
+  admin_username      = var.admin_username
   admin_password      = var.admin_password
 
   network_interface_ids = [azurerm_network_interface.nic1.id]
@@ -85,15 +100,16 @@ resource "azurerm_linux_virtual_machine" "vm1" {
     sku       = "18.04-LTS"
     version   = "latest"
   }
+
+  computer_name = "vm1"
 }
 
-# Virtual Machine 2
 resource "azurerm_linux_virtual_machine" "vm2" {
-  name                = "server2"
+  name                = "vm2"
   resource_group_name = azurerm_resource_group.rg.name
   location            = azurerm_resource_group.rg.location
-  size                = "Standard_B1s"
-  admin_username      = "azureuser"
+  size                = "Standard_B1ms"
+  admin_username      = var.admin_username
   admin_password      = var.admin_password
 
   network_interface_ids = [azurerm_network_interface.nic2.id]
@@ -109,4 +125,14 @@ resource "azurerm_linux_virtual_machine" "vm2" {
     sku       = "18.04-LTS"
     version   = "latest"
   }
+
+  computer_name = "vm2"
+}
+
+output "vm1_public_ip" {
+  value = azurerm_public_ip.public_ip1.ip_address
+}
+
+output "vm2_public_ip" {
+  value = azurerm_public_ip.public_ip2.ip_address
 }
