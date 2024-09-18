@@ -39,6 +39,7 @@ resource "azurerm_network_security_rule" "allow_all_outbound" {
   source_address_prefix       = "*"
   destination_address_prefix  = "*"
   network_security_group_name = azurerm_network_security_group.nsg.name
+  resource_group_name         = azurerm_resource_group.rg.name
 }
 
 resource "azurerm_public_ip" "public_ip1" {
